@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FTL Inference</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .row { display: flex; gap: 24px; align-items: flex-start; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; width: 480px; }
+    input[type="number"], select { width: 100%; padding: 8px; margin: 4px 0 12px; }
+    button { padding: 10px 16px; border: none; background: #0d6efd; color: white; border-radius: 6px; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; background: #f1f1f1; margin-right: 8px; }
+    .muted { color: #666; font-size: 13px; }
+    .result { white-space: pre; background: #f9f9f9; padding: 12px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Federated Transfer Learning: Inference</h1>
+  <p class="muted">Model directory: <code>{{ model_dir }}</code></p>
+
+  <div class="row">
+    <div class="card">
+      <h3>1) Select Hospital</h3>
+      <select id="hospital_id">
+        <option value="">-- Select --</option>
+        {% for h in hospitals %}
+          <option value="{{ h }}">{{ h }}</option>
+        {% endfor %}
+      </select>
+      <p id="schema" class="muted"></p>
+    </div>
+
+    <div class="card">
+      <h3>2) Enter Features</h3>
+      <div id="form"></div>
+      <button id="predict_btn" disabled>Predict</button>
+    </div>
+
+    <div class="card">
+      <h3>3) Result</h3>
+      <div class="result" id="result">---</div>
+    </div>
+  </div>
+
+  <script>
+    const hospitalSelect = document.getElementById('hospital_id');
+    const schemaEl = document.getElementById('schema');
+    const formEl = document.getElementById('form');
+    const predictBtn = document.getElementById('predict_btn');
+    const resultEl = document.getElementById('result');
+
+    async function loadMeta(hid) {
+      const res = await fetch(`/meta/${hid}`);
+      if (!res.ok) { throw new Error('meta fetch failed'); }
+      return res.json();
+    }
+
+    function renderForm(features) {
+      formEl.innerHTML = '';
+      for (const f of features) {
+        const wrapper = document.createElement('div');
+        const label = document.createElement('label');
+        label.textContent = f;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = 'any';
+        input.name = f;
+        input.placeholder = '0';
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        formEl.appendChild(wrapper);
+      }
+    }
+
+    hospitalSelect.addEventListener('change', async (e) => {
+      resultEl.textContent = '---';
+      predictBtn.disabled = true;
+      const hid = e.target.value;
+      if (!hid) { formEl.innerHTML=''; schemaEl.textContent=''; return; }
+      try {
+        const meta = await loadMeta(hid);
+        schemaEl.textContent = `Features (${meta.feature_names.length}): ` + meta.feature_names.join(', ');
+        renderForm(meta.feature_names);
+        predictBtn.disabled = false;
+      } catch (err) {
+        schemaEl.textContent = 'Error loading meta.';
+      }
+    });
+
+    predictBtn.addEventListener('click', async () => {
+      const hid = hospitalSelect.value;
+      const formData = new FormData();
+      formData.append('hospital_id', hid);
+      for (const el of formEl.querySelectorAll('input')) {
+        formData.append(el.name, el.value);
+      }
+      predictBtn.disabled = true;
+      resultEl.textContent = 'Predicting...';
+      try {
+        const res = await fetch('/predict', { method: 'POST', body: formData });
+        const data = await res.json();
+        resultEl.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        resultEl.textContent = 'Error: ' + err.message;
+      } finally {
+        predictBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

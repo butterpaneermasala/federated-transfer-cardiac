@@ -44,19 +44,41 @@ Simply specify CSV paths in the config file - the system automatically handles e
 
 ```
 fedtra/
-├── config.py                  # Configuration parameters
-├── models.py                  # Neural network architectures
-├── server.py                  # Global federated server
-├── hospital.py                # Hospital client implementation
-├── csv_data_loader.py         # Automatic CSV data loading (NEW!)
-├── data_generator.py          # Synthetic data generation (legacy)
-├── federated_trainer.py       # Main training orchestration
-├── requirements.txt           # Python dependencies
-├── README.md                  # This file
-├── CSV_USAGE_GUIDE.md         # Detailed CSV usage guide (NEW!)
-└── datasets/                  # Place your CSV files here
-    ├── Medicaldataset.csv
-    └── cardiac arrest dataset.csv
+├── src/
+│   └── fedtra/
+│       ├── config.py              # Configuration parameters
+│       ├── models.py              # Neural network architectures
+│       ├── server.py              # Global federated server
+│       ├── hospital.py            # Hospital client implementation
+│       ├── csv_data_loader.py     # Automatic CSV data loading
+│       └── federated_trainer.py   # CLI training orchestration
+│
+├── services/
+│   ├── orchestrator.py            # File-based FL orchestrator (demo)
+│   └── client_agent.py            # Client-side trainer (per hospital)
+│
+├── scripts/
+│   └── inference.py               # Real inference using saved artifacts
+│
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── IMPLEMENTATION_SUMMARY.md
+│   ├── COMPLETE_SYSTEM_SUMMARY.md
+│   ├── CSV_USAGE_GUIDE.md
+│   └── UPDATE_SUMMARY.md
+│
+├── tests/
+│   └── test_components.py         # Unit tests
+│
+├── datasets/                      # Place your CSV files here
+│   ├── Medicaldataset.csv
+│   └── cardiac arrest dataset.csv
+│
+├── reports/                       # Generated plots, etc.
+│   └── training_results.png
+│
+├── requirements.txt
+└── README.md
 ```
 
 ## 🚀 Quick Start
@@ -86,10 +108,12 @@ HOSPITAL_CONFIGS = {
     }
 }
 ```
-3. **Run training**:
+3. **Run training (CLI)**:
 ```bash
-python federated_trainer.py
+PYTHONPATH=src python -m fedtra.federated_trainer
 ```
+
+<!-- API server instructions removed to keep documentation CLI-only -->
 
 The system automatically:
 - Detects feature dimensions (can be different per hospital!)
@@ -97,6 +121,43 @@ The system automatically:
 - Normalizes features
 - Splits into train/test sets
 - Trains the federated model
+
+### Demo (native, no Docker)
+
+Use the `demo/` folder to simulate three machines in three terminals/VS Code windows:
+
+1) Orchestrator
+```bash
+cd demo/orchestrator
+bash run.sh
+```
+2) Hospital 1
+```bash
+cd demo/hospital_1
+bash run.sh
+```
+3) Hospital 2
+```bash
+cd demo/hospital_2
+bash run.sh
+```
+
+Artifacts are saved under `orchestrator_share/` (global/updates) and `hospital_models/`.
+
+### Inference (real model)
+
+After training:
+```bash
+PYTHONPATH=src python scripts/inference.py \
+  --hospital_id hospital_1 \
+  --json '{"Age":64,"Gender":1,...}'
+```
+
+### Run tests
+
+```bash
+PYTHONPATH=src python tests/test_components.py
+```
 
 ### Example Results (Medical Datasets)
 
@@ -254,12 +315,7 @@ Modify `server.py` to implement:
 
 ### Real Data
 
-Replace `data_generator.py` with your own data loading:
-
-```python
-# In your training script
-hospital_1.set_data(your_X_train, your_y_train)
-```
+Use `csv_data_loader.py` for CSVs, or directly call `Hospital.set_data(X, y)` with your tensors if you have a custom pipeline.
 
 ## 📚 References
 

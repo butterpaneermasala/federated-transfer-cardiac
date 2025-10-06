@@ -1,0 +1,1 @@
+PYTHONPATH=src python scripts/plot_metrics.py

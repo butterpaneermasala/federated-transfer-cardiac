@@ -1,0 +1,1 @@
+PYTHONPATH=src MODEL_DIR=orchestrator_share/hospital_models python web/app.py
