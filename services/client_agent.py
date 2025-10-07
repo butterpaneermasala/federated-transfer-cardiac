@@ -192,7 +192,18 @@ def main():
             # Train and submit update for the next round
             submit_round = current_round + 1
             print(f"Training locally for round {submit_round}...")
+            t0 = time.time()
             loss, acc = hospital.train_local(local_epochs)
+            train_time = time.time() - t0
+            # Append metrics for this round as well (so plots have rounds 1..N)
+            with open(metrics_path, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    datetime.utcnow().isoformat(), hospital_id, submit_round,
+                    f"{loss:.6f}", f"{acc:.2f}",
+                    hospital.num_samples, local_epochs, cfg.LEARNING_RATE, getattr(cfg, 'FEDPROX_MU', 0.0),
+                    device, hospital_config['input_dim'], f"{train_time:.3f}"
+                ])
             shared = hospital.get_shared_weights()
             upd_path = os.path.join(updates_dir, f'client_{hospital_id}_round_{submit_round}.pt')
             save_client_update(upd_path, hospital_id, shared, hospital.num_samples)

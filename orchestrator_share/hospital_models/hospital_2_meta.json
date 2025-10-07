@@ -1,0 +1,30 @@
+{
+  "hospital_id": "hospital_2",
+  "input_dim": 13,
+  "feature_names": [
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal"
+  ],
+  "adapter_hidden_dim": 64,
+  "latent_dim": 128,
+  "encoder_hidden_dims": [
+    256,
+    128
+  ],
+  "num_classes": 2,
+  "class_names": [
+    "0",
+    "1"
+  ]
+}

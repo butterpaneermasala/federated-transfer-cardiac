@@ -1,0 +1,25 @@
+{
+  "hospital_id": "hospital_1",
+  "input_dim": 8,
+  "feature_names": [
+    "Age",
+    "Gender",
+    "Heart rate",
+    "Systolic blood pressure",
+    "Diastolic blood pressure",
+    "Blood sugar",
+    "CK-MB",
+    "Troponin"
+  ],
+  "adapter_hidden_dim": 64,
+  "latent_dim": 128,
+  "encoder_hidden_dims": [
+    256,
+    128
+  ],
+  "num_classes": 2,
+  "class_names": [
+    "negative",
+    "positive"
+  ]
+}
